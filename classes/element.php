@@ -29,7 +29,7 @@ defined('MOODLE_INTERNAL') || die();
 /**
  * Date - Course grade date
  */
-define('CUSTOMCERT_expirationdate_COURSE_GRADE', '0');
+define('CUSTOMCERT_EXPIRATIONDATE_COURSE_GRADE', '0');
 
 /**
  * Date - Issue
