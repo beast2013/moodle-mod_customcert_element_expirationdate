@@ -104,16 +104,13 @@ class element extends \mod_customcert\element {
      * @param \mod_customcert\edit_element_form $mform the edit_form instance
      */
     public function render_form_elements($mform) {
-        global $CFG, $COURSE;
+        global $COURSE;
 
         // Get the possible date options.
         $dateoptions = array();
         $dateoptions[CUSTOMCERT_EXPIRATIONDATE_ISSUE] = get_string('issueddate', 'customcertelement_expirationdate');
         $dateoptions[CUSTOMCERT_EXPIRATIONDATE_CURRENT_DATE] = get_string('currentdate', 'customcertelement_expirationdate');
-        $completionenabled = $CFG->enablecompletion && ($COURSE->id == SITEID || $COURSE->enablecompletion);
-        if ($completionenabled) {
-            $dateoptions[CUSTOMCERT_EXPIRATIONDATE_COMPLETION] = get_string('completiondate', 'customcertelement_expirationdate');
-        }
+        $dateoptions[CUSTOMCERT_EXPIRATIONDATE_COMPLETION] = get_string('completiondate', 'customcertelement_expirationdate');
         $dateoptions[CUSTOMCERT_EXPIRATIONDATE_COURSE_START] = get_string('coursestartdate', 'customcertelement_expirationdate');
         $dateoptions[CUSTOMCERT_EXPIRATIONDATE_COURSE_END] = get_string('courseenddate', 'customcertelement_expirationdate');
         $dateoptions[CUSTOMCERT_EXPIRATIONDATE_COURSE_GRADE] = get_string('coursegradedate', 'customcertelement_expirationdate');
@@ -249,12 +246,7 @@ class element extends \mod_customcert\element {
 
         // Ensure that a date has been set.
         if (!empty($date)) {
-            $date = $this->get_expirationdate_format_string($this->get_expirationdate_future_int($date, $interval, $intervalunit), $dateformat);
-            // If we are previewing, we want to let the user know it's an example date so they don't get confused.
-            if ($preview) {
-                $date = get_string('exampledata', 'customcert', 'date') . ' ' . $date;
-            }
-            \mod_customcert\element_helper::render_content($pdf, $this, $date);
+            \mod_customcert\element_helper::render_content($pdf, $this, $this->get_expirationdate_format_string($this->get_expirationdate_future_int($date, $interval, $intervalunit), $dateformat));
         }
     }
 
@@ -331,44 +323,27 @@ class element extends \mod_customcert\element {
      * @return array the list of date formats
      */
     public static function get_expirationdate_formats() {
-        // Hard-code date so users can see the difference between short dates with and without the leading zero.
-        // Eg. 06/07/18 vs 6/07/18.
-        $date = 1530849658;
+        $date = time();
 
         $suffix = self::get_expirationordinal_number_suffix(userdate($date, '%d'));
 
-        $dateformats = [
+        $dateformats = array(
             1 => userdate($date, '%B %d, %Y'),
-            2 => userdate($date, '%B %d' . $suffix . ', %Y')
-        ];
-
-        $strdateformats = [
-            'strftimedate',
-            'strftimedatefullshort',
-            'strftimedatefullshortwleadingzero',
-            'strftimedateshort',
-            'strftimedatetime',
-            'strftimedatetimeshort',
-            'strftimedatetimeshortwleadingzero',
-            'strftimedaydate',
-            'strftimedaydatetime',
-            'strftimedayshort',
-            'strftimedaytime',
-            'strftimemonthyear',
-            'strftimerecent',
-            'strftimerecentfull',
-            'strftimetime'
-        ];
-
-        foreach ($strdateformats as $strdateformat) {
-            if ($strdateformat == 'strftimedatefullshortwleadingzero') {
-                $dateformats[$strdateformat] = userdate($date, get_string('strftimedatefullshort', 'langconfig'), 99, false);
-            } else if ($strdateformat == 'strftimedatetimeshortwleadingzero') {
-                $dateformats[$strdateformat] = userdate($date, get_string('strftimedatetimeshort', 'langconfig'), 99, false);
-            } else {
-                $dateformats[$strdateformat] = userdate($date, get_string($strdateformat, 'langconfig'));
-            }
-        }
+            2 => userdate($date, '%B %d' . $suffix . ', %Y'),
+            'strftimedate' => userdate($date, get_string('strftimedate', 'langconfig')),
+            'strftimedatefullshort' => userdate($date, get_string('strftimedatefullshort', 'langconfig')),
+            'strftimedateshort' => userdate($date, get_string('strftimedateshort', 'langconfig')),
+            'strftimedatetime' => userdate($date, get_string('strftimedatetime', 'langconfig')),
+            'strftimedatetimeshort' => userdate($date, get_string('strftimedatetimeshort', 'langconfig')),
+            'strftimedaydate' => userdate($date, get_string('strftimedaydate', 'langconfig')),
+            'strftimedaydatetime' => userdate($date, get_string('strftimedaydatetime', 'langconfig')),
+            'strftimedayshort' => userdate($date, get_string('strftimedayshort', 'langconfig')),
+            'strftimedaytime' => userdate($date, get_string('strftimedaytime', 'langconfig')),
+            'strftimemonthyear' => userdate($date, get_string('strftimemonthyear', 'langconfig')),
+            'strftimerecent' => userdate($date, get_string('strftimerecent', 'langconfig')),
+            'strftimerecentfull' => userdate($date, get_string('strftimerecentfull', 'langconfig')),
+            'strftimetime' => userdate($date, get_string('strftimetime', 'langconfig'))
+        );
 
         return $dateformats;
     }
@@ -404,13 +379,7 @@ class element extends \mod_customcert\element {
 
         // Ok, so we must have been passed the actual format in the lang file.
         if (!isset($certificatedate)) {
-            if ($dateformat == 'strftimedatefullshortwleadingzero') {
-                $certificatedate = userdate($date, get_string('strftimedatefullshort', 'langconfig'), 99, false);
-            } else if ($dateformat == 'strftimedatetimeshortwleadingzero') {
-                $certificatedate = userdate($date, get_string('strftimedatetimeshort', 'langconfig'), 99, false);
-            } else {
-                $certificatedate = userdate($date, get_string($dateformat, 'langconfig'));
-            }
+            $certificatedate = userdate($date, get_string($dateformat, 'langconfig'));
         }
 
         return $certificatedate;
